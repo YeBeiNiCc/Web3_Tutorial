@@ -1,0 +1,16 @@
+
+const {task}=require("hardhat/config")
+task("interact-fundme","use fundme contract")
+.addParam("addr","fundme contract address")
+.setAction(async(taskargs,hre)=>{
+    // const fundMeFactory=ethers.getContractFactory("FundMe")
+    const fundMe = await ethers.getContractAt("FundMe",taskargs.addr)
+    const account=await ethers.getSigner()
+    const TX= await fundMe.fund({value: ethers.utils.parseEther("0.5")})
+    await TX.wait()
+    console.log(`one account is ${account.address} `)
+    const balanceoffundme=await fundMe.provider.getBalance(fundMe.address)
+    console.log(`the balance of contract is ${balanceoffundme}`)
+    const balanceofaccount=await fundMe.FundertoAcount(account.address)
+    console.log(`the balance of account is ${balanceofaccount}`)
+})
