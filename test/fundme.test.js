@@ -34,7 +34,7 @@ describe("test FundMe contract", async function () {
         expect(fundMe.fund({ value: ethers.utils.parseEther("0.01") })).to.be.revertedWith("don't have enough money")
     })
     it("test fund both time and value are enough", async function () {
-        fundMe.fund({ value: ethers.utils.parseEther("0.5") })
+        await fundMe.fund({ value: ethers.utils.parseEther("0.5") })
     })
 
     //getfund not-owner fund-over value-not-enough
@@ -49,24 +49,39 @@ describe("test FundMe contract", async function () {
     })
 
     it("test getfund value-not-enough",async function () {
-        fundMe.fund({value: ethers.utils.parseEther("1")})
+        await fundMe.fund({value: ethers.utils.parseEther("1")})
         expect(fundMe.getfund()).to.be.revertedWith("fund is not enough")
     })
 
-    //refund fund-enough fund-not-enough refund-seccond
+    it("test getfund owner value-enough fund-over",async function () {
+        await fundMe.fund({value: ethers.utils.parseEther("1")})
+        await helpers.time.increase(200)
+        await helpers.mine()
+        expect(fundMe.getfund()).to.emit(fundMe,"getFundEvent").withArgs(ethers.utils.parseEther("1"))
+    })
+
+    //refund fund-enough fund-not-enough refund-seccond 
     it("test refund fund-enough",async function () {
-        fundMe.fund({value: ethers.utils.parseEther("1")})
+        await fundMe.fund({value: ethers.utils.parseEther("1")})
         expect(fundMe.refund()).to.be.revertedWith("fund is  enough")
     })
 
     it("test refund fund-not-enough",async function () {
-        fundMe.fund({value: ethers.utils.parseEther("0.01")})
-        fundMe.refund()
+        await fundMe.fund({value: ethers.utils.parseEther("0.01")})
+        expect(fundMe.refund()).to.be.revertedWith("Fund is not over")
     })
 
     it("test refund fund-seccond",async function () {
-        fundMe.fund({value:ethers.utils.parseEther("0.01")})
-        fundMe.refund()
-        expect(fundMe.refund()).to.be.revertedWith("you are used refund")
+        await fundMe.fund({value:ethers.utils.parseEther("0.01")})
+        await fundMe.refund()
+        expect(fundMe.refund()).to.be.revertedWith("you are used refund or you are not fund")
+    })
+
+    it("test refund fund-not-reached fund-over funder-enough",async function () {
+        await fundMe.fund({value: ethers.utils.parseEther("0.01")})
+        await helpers.time.increase(200)
+        await helpers.mine()
+        expect(fundMe.refund()).to.emit(fundMe,"refundEvent").withArgs(account,ethers.utils.parseEther("0.01"))
+
     })
 })

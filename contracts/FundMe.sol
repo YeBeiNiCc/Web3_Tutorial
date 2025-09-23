@@ -10,9 +10,11 @@ contract FundMe {
     uint blockTime;
     bool getFundSuccss1 = false;
     address ERC20Addr;
-    constructor(uint _blockTime) {
+    event getFundEvent(uint256);
+    event refundEvent(address,uint256);
+    constructor(uint _blockTime,address DataFeed) {
         dataFeed = AggregatorV3Interface(
-            0x694AA1769357215DE4FAC081bf1f309aDC325306
+            DataFeed
         );
         Owner = msg.sender;
         deploymentTimestamp = block.timestamp;
@@ -45,27 +47,33 @@ contract FundMe {
         uint256 ethPrice = uint256(getChainlinkDataFeedLatestAnswer());
         return (ethAcount * ethPrice) / (10 ** 8);
     }
+
     function getfund() external fundOver onlyOwner{
         require(
             ethToUSD(address(this).balance) >= TARGET,
             "fund is not enough"
         );
         bool succss;
-        (succss, ) = payable(msg.sender).call{value: address(this).balance}("");
+        uint256 balance=address(this).balance;
+        (succss, ) = payable(msg.sender).call{value: balance}("");
         FundertoAcount[msg.sender] = 0;
         getFundSuccss1=true;
+        emit getFundEvent(balance);
     }
+
     function changeOwner(address newOwner) public onlyOwner{
         Owner = newOwner;
     }
     function refund() external fundOver{
         require(ethToUSD(address(this).balance) < TARGET, "fund is  enough");
-        require(FundertoAcount[msg.sender] != 0, "you are used refund");
+        require(FundertoAcount[msg.sender] != 0, "you are used refund or you are not fund");
         bool succss;
+        uint256 balance=FundertoAcount[msg.sender];
         (succss, ) = payable(msg.sender).call{
-            value: FundertoAcount[msg.sender]
+            value: balance
         }("");
         FundertoAcount[msg.sender] = 0;
+        emit refundEvent(msg.sender,balance);
     }
     modifier fundOver() {
         require(block.timestamp>deploymentTimestamp+blockTime,"Fund is not over");

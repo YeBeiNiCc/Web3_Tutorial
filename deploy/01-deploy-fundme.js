@@ -1,12 +1,35 @@
 
-const {LOCK_TIME} =require("../helper-hardhat-config")
-module.exports=async ({getNamedAccounts,deployments}) => {
-    const {account1}=await getNamedAccounts()
-    const {deploy} = deployments
-    await deploy("FundMe",{
+const { network } = require("hardhat")
+const { LOCK_TIME, networkConfig, deploymentsChainId, CONFRIMATION } = require("../helper-hardhat-config")
+const { networks } = require("../hardhat.config")
+
+module.exports = async ({ getNamedAccounts, deployments }) => {
+    const { account1 } = await getNamedAccounts()
+    const { deploy } = deployments
+    let dataFeed;
+    let confirmation;
+    if (deploymentsChainId.includes(network.name)) {
+        const mock = await deployments.get("MockV3Aggregator")
+        dataFeed = mock.address
+        confirmation = 0
+    } else {
+        dataFeed = networkConfig[network.config.chainId].ethUsdDataFeed
+        confirmation = CONFRIMATION
+    }
+
+    const fundMe= await deploy("FundMe", {
         from: account1,
-        args: [180],
+        args: [LOCK_TIME, dataFeed.address],
         log: true
     })
+    if(networks.config.chainId== 11155111 && process.env.PRIVATE_KEY){
+        await hre.run("verify:verify", {
+        address: fundMe.address,
+        constructorArguments: [LOCK_TIME, dataFeed.address],
+    });
+    }else{
+        console.log("you are not deploy on sepolia,verification skipped ...")
+    }
+    
 }
 module.exports.tags = ["all"]
