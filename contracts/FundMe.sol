@@ -4,7 +4,7 @@ import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interf
 contract FundMe {
     address public Owner;
     uint256 constant TARGET = 1000 * 10 ** 18;
-    AggregatorV3Interface internal dataFeed;
+    AggregatorV3Interface public dataFeed;
     uint256 MINVALUES = 100 * 10 ** 18;
     uint256 deploymentTimestamp;
     uint blockTime;
