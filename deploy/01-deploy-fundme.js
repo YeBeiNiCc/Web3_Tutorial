@@ -19,13 +19,14 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
     const fundMe= await deploy("FundMe", {
         from: account1,
-        args: [LOCK_TIME, dataFeed.address],
-        log: true
+        args: [LOCK_TIME, dataFeed],
+        log: true,
+        waitConfirmations: confirmation
     })
-    if(networks.config.chainId== 11155111 && process.env.PRIVATE_KEY){
+    if(network.config.chainId== 11155111 && process.env.PRIVATE_KEY){
         await hre.run("verify:verify", {
         address: fundMe.address,
-        constructorArguments: [LOCK_TIME, dataFeed.address],
+        constructorArguments: [LOCK_TIME, dataFeed],
     });
     }else{
         console.log("you are not deploy on sepolia,verification skipped ...")

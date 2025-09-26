@@ -1,7 +1,8 @@
 const { assert, expect } = require("chai")
-const { deployments, getNamedAccounts, ethers } = require("hardhat")
-const { LOCK_TIME, MINVALUES } = require("../helper-hardhat-config")
+const { deployments, getNamedAccounts, ethers, network } = require("hardhat")
+const { LOCK_TIME, MINVALUES, deploymentsChainId } = require("../helper-hardhat-config")
 const helpers = require("@nomicfoundation/hardhat-network-helpers")
+!deploymentsChainId.includes(network.name) ? describe.skip :
 describe("test FundMe contract", async function () {
     let fundMe
     let account
