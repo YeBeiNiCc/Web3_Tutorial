@@ -6,7 +6,7 @@ const { networks } = require("../hardhat.config")
 module.exports = async ({ getNamedAccounts, deployments }) => {
     const { account1 } = await getNamedAccounts()
     const { deploy } = deployments
-    let dataFeed;
+    let dataFeed ;
     let confirmation;
     if (deploymentsChainId.includes(network.name)) {
         const mock = await deployments.get("MockV3Aggregator")
@@ -21,7 +21,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
         from: account1,
         args: [LOCK_TIME, dataFeed],
         log: true,
-        waitConfirmations: confirmation
+        waitConfirmations: 0
     })
     if(network.config.chainId== 11155111 && process.env.PRIVATE_KEY){
         await hre.run("verify:verify", {

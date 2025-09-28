@@ -14,6 +14,7 @@ describe("test FundMe contract", async function () {
         account = (await getNamedAccounts()).account1
         account_cc=(await getNamedAccounts()).account2
         fundMedeploy = await deployments.get("FundMe")
+        MockV3Aggregator= await deployments.get("MockV3Aggregator")
         fundMe = await ethers.getContractAt("FundMe", fundMedeploy.address)
         fundMeSecond= fundMe.connect(account_cc)
     })
@@ -22,7 +23,7 @@ describe("test FundMe contract", async function () {
     })
 
     it("test fundme contract dataFeed that is we want", async function () {
-        assert.equal((await fundMe.dataFeed()), "0x694AA1769357215DE4FAC081bf1f309aDC325306")
+        assert.equal((await fundMe.dataFeed()), MockV3Aggregator.address)
     })
     //fund fund-over fund-values
     it("test fund is over", async function () {
@@ -68,18 +69,20 @@ describe("test FundMe contract", async function () {
     })
 
     it("test refund fund-not-enough",async function () {
-        await fundMe.fund({value: ethers.utils.parseEther("0.01")})
+        await fundMe.fund({value: ethers.utils.parseEther("0.1")})
         expect(fundMe.refund()).to.be.revertedWith("Fund is not over")
     })
 
-    it("test refund fund-seccond",async function () {
-        await fundMe.fund({value:ethers.utils.parseEther("0.01")})
+    it("test refund refund-seccond",async function () {
+        await fundMe.fund({value:ethers.utils.parseEther("0.1")})
+        await helpers.time.increase(200)
+        await helpers.mine()
         await fundMe.refund()
         expect(fundMe.refund()).to.be.revertedWith("you are used refund or you are not fund")
     })
 
     it("test refund fund-not-reached fund-over funder-enough",async function () {
-        await fundMe.fund({value: ethers.utils.parseEther("0.01")})
+        await fundMe.fund({value: ethers.utils.parseEther("0.1")})
         await helpers.time.increase(200)
         await helpers.mine()
         expect(fundMe.refund()).to.emit(fundMe,"refundEvent").withArgs(account,ethers.utils.parseEther("0.01"))
